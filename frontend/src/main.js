@@ -220,10 +220,10 @@ function ensureBrowserHasSpeechAPI() {
   start();
 }
 
-// Chrome only exposes the Speech Recognition API in a secure context. A page
-// opened from the WSL/LAN IP over plain http is NOT secure, so the API is
-// absent even in a fully up-to-date Chrome. Show the actual reason instead of
-// a generic "unsupported browser" message.
+// Work out why the API is genuinely absent, rather than always blaming the
+// browser. Chrome does gate the API on secure contexts, so http on a LAN or WSL
+// IP is a real cause -- but it is not the only one, and claiming it is would
+// send people down the wrong path.
 function explainWhyItIsMissing() {
   const box = unsupportedEl.querySelector(".unsupported__box");
   if (!box) return;
