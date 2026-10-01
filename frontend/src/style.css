@@ -422,3 +422,27 @@ body {
   color: var(--text-dim);
   font-size: 0.95rem;
 }
+
+.unsupported__box p + p {
+  margin-top: 10px;
+}
+
+.unsupported__box code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.unsupported__box strong {
+  color: var(--text);
+}
+
+.unsupported__reason {
+  color: #fca5a5;
+  font-weight: 600;
+}

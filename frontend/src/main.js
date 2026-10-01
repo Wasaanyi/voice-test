@@ -192,11 +192,49 @@ function ensureBrowserHasSpeechAPI() {
   if (!supported) {
     btnRecord.hidden = true;
     statusEl.hidden = true;
+    explainWhyItIsMissing();
     unsupportedEl.hidden = false;
     return;
   }
 
   start();
+}
+
+// Chrome only exposes the Speech Recognition API in a secure context. A page
+// opened from the WSL/LAN IP over plain http is NOT secure, so the API is
+// absent even in a fully up-to-date Chrome. Show the actual reason instead of
+// a generic "unsupported browser" message.
+function explainWhyItIsMissing() {
+  const box = unsupportedEl.querySelector(".unsupported__box");
+  if (!box) return;
+
+  const isChrome = /Chrome|Chromium|Edg/.test(navigator.userAgent);
+  const isSecure = window.isSecureContext;
+  const rows = [];
+
+  rows.push(
+    `<p class="unsupported__reason">This page is served over <code>${location.protocol}//${location.host}</code>.`
+  );
+
+  if (!isSecure) {
+    rows.push(
+      "<p>Chrome hides the speech recognition API on insecure origins, so it is missing even though your browser supports it.</p>"
+    );
+    rows.push(
+      `<p><strong>Fix:</strong> open <code>${location.protocol}//localhost:${location.port || "5173"}</code> instead. In WSL, localhost is forwarded from Windows automatically.</p>`
+    );
+  } else if (!isChrome) {
+    rows.push(
+      "<p>Firefox and Safari have not shipped a working speech recognition engine. Use Google Chrome.</p>"
+    );
+  } else {
+    rows.push(
+      "<p>The browser looks like Chrome and the page is secure, which is unexpected. Check for extensions blocking the microphone or the site in chrome://settings/content/microphone.</p>"
+    );
+  }
+
+  rows.push("</p>");
+  box.insertAdjacentHTML("afterbegin", rows.join(""));
 }
 
 ensureBrowserHasSpeechAPI();
