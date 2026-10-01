@@ -57,7 +57,23 @@ async function generateWithRetry(prompt) {
 }
 
 const server = http.createServer(async function (req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // A POST carrying Content-Type: application/json triggers a CORS preflight.
+  // Allowing the origin alone is not enough: the browser also requires the
+  // preflight to permit the request headers and methods, otherwise it blocks
+  // the real request before it is ever sent.
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    process.env.ALLOWED_ORIGINS || "*"
+  );
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Max-Age", "86400");
+
+  // Answer the preflight directly; there is nothing to generate.
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    return res.end();
+  }
 
   switch (req.method) {
     case "POST": {

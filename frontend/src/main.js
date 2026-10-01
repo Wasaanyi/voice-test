@@ -69,7 +69,11 @@ async function promptAI(prompt) {
   });
 
   if (!response.ok) {
-    throw new Error(`Server responded ${response.status}`);
+    const error = new Error(`Server responded ${response.status}`);
+    // Let the UI distinguish "backend is down" from "Gemini is busy", which
+    // need very different advice.
+    error.reachedServer = true;
+    throw error;
   }
 
   return response.text();
@@ -123,7 +127,9 @@ function setUpSpeechRecognition(onFinish) {
   listener.onend = function () {
     const transcript = finalText.trim();
     if (!transcript) {
-      renderTranscript("");
+      // Stopped without capturing anything. Reset the UI, otherwise the button
+      // stays stuck on "Sending..." forever.
+      onFinish(null);
       return;
     }
     onFinish(transcript);
@@ -137,6 +143,16 @@ async function start() {
   let isBusy = false;
 
   const listener = setUpSpeechRecognition(async function (transcript) {
+    if (transcript === null) {
+      // Nothing was captured, so there is nothing to send.
+      isListening = false;
+      btnLabel.textContent = "Start speaking";
+      btnRecord.dataset.state = "idle";
+      setStatus("idle", "Ready");
+      setHint("Click to begin, click again to send.");
+      return;
+    }
+
     isBusy = true;
     btnRecord.disabled = true;
     btnLabel.textContent = "Thinking...";
@@ -156,7 +172,11 @@ async function start() {
     } catch (error) {
       console.error("error:", error);
       setStatus("idle", "Error");
-      setHint("Could not reach the backend. Is the server running on :8000?");
+      setHint(
+        error.reachedServer
+          ? "Gemini is busy right now (its servers are overloaded). Try again in a moment."
+          : "Could not reach the backend. Is the server running on :8000?"
+      );
     } finally {
       isBusy = false;
       isListening = false;

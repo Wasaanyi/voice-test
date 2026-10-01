@@ -60,3 +60,29 @@ This deviates from the tutorial in three places:
    any malformed request. It is now caught, with `uncaughtException` as a backstop.
 
 Your API key lives in `server/.env`, which is gitignored. Never commit it.
+
+## Troubleshooting
+
+**"Speech recognition unavailable"** — the browser cannot see the API at all.
+Open the page at `http://localhost:5173`. Chrome only exposes the Speech
+Recognition API in a secure context, so reaching the dev server through a WSL or
+LAN IP address over plain http will always fail, however new your Chrome is.
+The notice reports the page's protocol and `isSecureContext` to confirm which
+case you hit.
+
+## Tests
+
+```sh
+cd frontend
+npx playwright install chromium   # once
+npm test
+```
+
+The suite drives a headless browser against the running dev server and covers
+the two bugs that were invisible without a real click: the full-screen
+"unsupported" overlay silently swallowing every click, and the record button
+staying stuck on "Sending..." when you stop without speaking.
+
+Note that headless Chromium's `SpeechRecognition` is a non-functional stub
+(`start()` emits no events at all), so these tests cannot validate real speech
+recognition or Gemini responses. That path needs a desktop browser.

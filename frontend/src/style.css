@@ -403,6 +403,13 @@ body {
   z-index: 10;
 }
 
+/* An explicit display value above beats the browser's default [hidden] rule,
+   which would otherwise leave this full-screen overlay visible and swallowing
+   every click while it claims the browser is unsupported. */
+.unsupported[hidden] {
+  display: none;
+}
+
 .unsupported__box {
   max-width: 460px;
   background: var(--surface);
